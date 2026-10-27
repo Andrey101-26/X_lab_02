@@ -1,27 +1,22 @@
-import logging
-from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from .models import Event, Level
-
-logger = logging.getLogger(__name__)
+from .models import Level
 
 
 @dataclass
 class Stats:
     """Хранит агрегированную статистику по событиям."""
-
     total_events: int = 0
-    level_counts: dict[str, int] = field(default_factory=dict)
-    source_counts: dict[str, int] = field(default_factory=dict)
-    error_source_counts: dict[str, int] = field(default_factory=dict)
+    level_counts: dict = field(default_factory=dict)
+    source_counts: dict = field(default_factory=dict)
+    error_source_counts: dict = field(default_factory=dict)
     first_timestamp: datetime | None = None
     last_timestamp: datetime | None = None
     skipped_count: int = 0
 
 
-def analyze_events(events: Iterator[Event | None]) -> Stats:
+def analyze_events(events):
     """Обрабатывает поток событий и собирает статистику."""
     stats = Stats()
 
@@ -39,9 +34,7 @@ def analyze_events(events: Iterator[Event | None]) -> Stats:
         stats.source_counts[event.source] = stats.source_counts.get(event.source, 0) + 1
 
         if event.level in (Level.ERROR, Level.CRITICAL):
-            stats.error_source_counts[event.source] = (
-                stats.error_source_counts.get(event.source, 0) + 1
-            )
+            stats.error_source_counts[event.source] = stats.error_source_counts.get(event.source, 0) + 1
 
         if stats.first_timestamp is None or event.timestamp < stats.first_timestamp:
             stats.first_timestamp = event.timestamp

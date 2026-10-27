@@ -1,5 +1,4 @@
 import argparse
-import logging
 import sys
 from itertools import chain
 from pathlib import Path
@@ -38,8 +37,6 @@ def main():
 
 def run_analysis(args):
     """Запускает анализ файлов."""
-    logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
-
     all_events = []
 
     for input_path in args.inputs:
