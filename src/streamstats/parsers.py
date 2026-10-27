@@ -74,3 +74,15 @@ def _validate_and_create_event(row: dict, line_num: int) -> Event:
         source=source,
         message=message
     )
+
+
+def get_parser(format_name: str):
+    """Возвращает парсер по имени формата."""
+    parsers = {
+        "csv": parse_csv,
+        "jsonl": parse_jsonl,
+    }
+    if format_name not in parsers:
+        from .errors import UnsupportedFormatError
+        raise UnsupportedFormatError(f"Unsupported format: {format_name}")
+    return parsers[format_name]

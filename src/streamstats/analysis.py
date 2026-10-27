@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Stats:
     """Хранит агрегированную статистику по событиям."""
+
     total_events: int = 0
     level_counts: dict[str, int] = field(default_factory=dict)
     source_counts: dict[str, int] = field(default_factory=dict)
@@ -38,7 +39,9 @@ def analyze_events(events: Iterator[Event | None]) -> Stats:
         stats.source_counts[event.source] = stats.source_counts.get(event.source, 0) + 1
 
         if event.level in (Level.ERROR, Level.CRITICAL):
-            stats.error_source_counts[event.source] = stats.error_source_counts.get(event.source, 0) + 1
+            stats.error_source_counts[event.source] = (
+                stats.error_source_counts.get(event.source, 0) + 1
+            )
 
         if stats.first_timestamp is None or event.timestamp < stats.first_timestamp:
             stats.first_timestamp = event.timestamp

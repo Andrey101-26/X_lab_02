@@ -1,11 +1,12 @@
 import argparse
 import logging
 import sys
+from itertools import chain
 from pathlib import Path
 
 from .analysis import analyze_events
 from .errors import CLIConfigError, UnsupportedFormatError
-from .parsers import parse_csv, parse_jsonl
+from .parsers import get_parser
 from .report import generate_report
 
 
@@ -23,10 +24,16 @@ def main():
 
     if not args.command:
         parser.print_help()
-        sys.exit(1)
+        sys.exit(2)
 
-    if args.command == "analyze":
+    try:
         run_analysis(args)
+    except (CLIConfigError, UnsupportedFormatError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(2)
+    except Exception as e:  # noqa: BLE001
+        print(f"Unexpected error: {e}", file=sys.stderr)
+        sys.exit(2)
 
 
 def run_analysis(args):
@@ -40,18 +47,11 @@ def run_analysis(args):
         if not path.exists():
             raise CLIConfigError(f"File not found: {input_path}")
 
-        if args.format == "csv":
-            events = parse_csv(path, skip_invalid=args.skip_invalid)
-        elif args.format == "jsonl":
-            events = parse_jsonl(path, skip_invalid=args.skip_invalid)
-        else:
-            raise UnsupportedFormatError(f"Unsupported format: {args.format}")
-
+        parser_func = get_parser(args.format)
+        events = parser_func(path, skip_invalid=args.skip_invalid)
         all_events.append(events)
 
-    from itertools import chain
     combined_events = chain.from_iterable(all_events)
-
     stats = analyze_events(combined_events)
 
     generate_report(stats, Path(args.output))
